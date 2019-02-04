@@ -1,5 +1,5 @@
-#[derive(Debug)]
-enum PacketMode {
+// #[derive(Debug)]
+pub enum PacketMode {
     SILK,   // low bandwidth algorithm
     Hybrid, // both SILK and CELT
     CELT,   // high bandwidth algorithm
@@ -19,8 +19,8 @@ enum PacketMode {
 // |                      |                 |                         |
 // | FB (fullband)        |      20 kHz (*) |                  48 kHz |
 // +----------------------+-----------------+-------------------------+
-#[derive(Debug)]
-enum Bandwidth {
+// #[derive(Debug)]
+pub enum Bandwidth {
     Narrow,
     Medium,
     Wide,
@@ -28,22 +28,22 @@ enum Bandwidth {
     Full,
 }
 
-#[derive(Debug)]
-enum Signal {
+// #[derive(Debug)]
+pub enum Signal {
     Mono,
     Stereo,
 }
 
-#[derive(Debug)]
-enum FrameCountCode {
+// #[derive(Debug)]
+pub enum FrameCountCode {
     Single,
     TwoEqual,
     TwoDifferent,
     Arbitrary,
 }
 
-#[derive(Debug)]
-struct PacketConfiguration {
+// #[derive(Debug)]
+pub struct PacketConfiguration {
     pub mode: PacketMode,
     pub bandwidth: Bandwidth,
     pub frame_size: f32,
@@ -51,11 +51,11 @@ struct PacketConfiguration {
     pub code: FrameCountCode,
 }
 
-struct OpusPacket {
+pub struct OpusPacket {
     config: PacketConfiguration,
 }
 
-fn opus_packet_from_toc_byte(toc_byte: u8) -> Result<OpusPacket, &'static str> {
+pub fn packet_config_from_toc_byte(toc_byte: u8) -> Result<PacketConfiguration, &'static str> {
     let config_val: u8 = 0b0000_1111 & toc_byte;
 
     let mode: PacketMode;
@@ -88,10 +88,10 @@ fn opus_packet_from_toc_byte(toc_byte: u8) -> Result<OpusPacket, &'static str> {
                 8...11 => {
                     bandwidth = Bandwidth::Wide;
                     match config_val {
-                        0 => frame_size = 10.0,
-                        1 => frame_size = 20.0,
-                        2 => frame_size = 40.0,
-                        3 => frame_size = 60.0,
+                        8 => frame_size = 10.0,
+                        9 => frame_size = 20.0,
+                        10 => frame_size = 40.0,
+                        11 => frame_size = 60.0,
                         _ => return Err("match_code_byte_failed impossibly"),
                     }
                 }
@@ -183,21 +183,35 @@ fn opus_packet_from_toc_byte(toc_byte: u8) -> Result<OpusPacket, &'static str> {
         _ => return Err("match_code_byte_failed impossibly"),
     };
 
-    let config = PacketConfiguration {
+    Ok(PacketConfiguration {
         mode,
         bandwidth,
         frame_size,
         signal,
         code,
-    };
-
-    Ok(OpusPacket { config })
+    })
 }
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+
     #[test]
     fn it_works() {
         assert_eq!(2 + 2, 4);
+    }
+
+    #[test]
+    fn it_creates_packet_config_from_u8() {
+        for byte in 0..255 {
+            println!("Byte is: {}", byte);
+            let config = packet_config_from_toc_byte(byte);
+            assert!(config.is_ok());
+        }
+    }
+
+    #[test]
+    fn it_creates_opus_packet_from_vec_u8() {
+        // unimplemented!();
     }
 }
