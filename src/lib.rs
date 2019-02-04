@@ -53,6 +53,7 @@ pub struct PacketConfiguration {
 
 pub struct OpusPacket {
     config: PacketConfiguration,
+    
 }
 
 pub fn packet_config_from_toc_byte(toc_byte: u8) -> Result<PacketConfiguration, &'static str> {
@@ -195,11 +196,6 @@ pub fn packet_config_from_toc_byte(toc_byte: u8) -> Result<PacketConfiguration, 
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
 
     #[test]
     fn it_creates_packet_config_from_u8() {
