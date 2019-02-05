@@ -29,7 +29,7 @@ fn run() -> Result<(), std::io::Error> {
         let r = packet_reader.read_packet();
         match r {
             Ok(Some(ogg_packet)) => {
-                let opus_bytes = ogg_packet.data.as_slice();
+                let opus_bytes = ogg_packet.data;
                 // next we will call some funtion that takes the Vec<u8> and returns an OPUS packet struct
                 let _opus_packet = opus_decode::get_opus_packet(opus_bytes);
             }
