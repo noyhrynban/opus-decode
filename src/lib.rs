@@ -53,7 +53,7 @@ pub struct PacketConfiguration {
 
 pub struct OpusPacket {
     config: PacketConfiguration,
-    
+    data: &'static [u8],
 }
 
 pub fn packet_config_from_toc_byte(toc_byte: u8) -> Result<PacketConfiguration, &'static str> {
@@ -193,6 +193,17 @@ pub fn packet_config_from_toc_byte(toc_byte: u8) -> Result<PacketConfiguration, 
     })
 }
 
+pub fn get_opus_packet(packet_data: &'static [u8]) -> Result<OpusPacket, &'static str> {
+    if let Some((toc_byte, data)) = packet_data.split_first() {
+        Ok(OpusPacket {
+            config: packet_config_from_toc_byte(*toc_byte).unwrap(),
+            data,
+        })
+    } else {
+        Err("splitting the packet into a TOC byte and data failed")
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -207,7 +218,5 @@ mod tests {
     }
 
     #[test]
-    fn it_creates_opus_packet_from_vec_u8() {
-        // unimplemented!();
-    }
+    fn it_creates_opus_packet_from_vec_u8() {}
 }
