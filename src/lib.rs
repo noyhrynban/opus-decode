@@ -57,7 +57,7 @@ pub struct OpusPacket {
 }
 
 pub fn packet_config_from_toc_byte(toc_byte: u8) -> Result<PacketConfiguration, &'static str> {
-    let config_val: u8 = 0b0000_1111 & toc_byte;
+    let config_val: u8 = 0b0001_1111 & toc_byte;
 
     let mode: PacketMode;
     let bandwidth: Bandwidth;

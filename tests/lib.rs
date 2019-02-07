@@ -2,6 +2,7 @@ extern crate opus_decode;
 
 #[cfg(test)]
 mod tests {
+    use opus_decode::get_opus_packet;
     use opus_decode::packet_config_from_toc_byte;
 
     #[test]
@@ -14,5 +15,7 @@ mod tests {
     }
 
     #[test]
-    fn it_creates_opus_packet_from_vec_u8() {}
+    fn it_creates_opus_packet_from_vec_u8() {
+        get_opus_packet([].to_vec()); // Don't care about the result since it should fail
+    }
 }
