@@ -7,6 +7,7 @@ use ogg::PacketReader;
 use std::env;
 use std::fs::File;
 
+#[cfg_attr(tarpaulin, skip)]
 fn main() {
     match run() {
         Ok(_) => (),
