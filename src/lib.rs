@@ -203,3 +203,20 @@ pub fn get_opus_packet(packet_data: Vec<u8>) -> Result<OpusPacket, &'static str>
         Err("splitting the packet into a TOC byte and data failed")
     }
 }
+
+mod tests {
+    #[test]
+    fn it_creates_packet_config_from_u8() {
+        for byte in 0..255 {
+            println!("Byte is: {}", byte);
+            let config = super::packet_config_from_toc_byte(byte);
+            assert!(config.is_ok());
+        }
+    }
+
+    #[test]
+    #[should_panic]
+    fn it_creates_opus_packet_from_vec_u8() {
+        super::get_opus_packet([].to_vec()).unwrap(); // Don't care about the result since it should fail
+    }
+}

@@ -46,3 +46,14 @@ fn run() -> Result<(), std::io::Error> {
     println!("Found {} packets.", counter);
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::run;
+
+    #[test]
+    #[should_panic]
+    fn it_should_run() {
+        run().unwrap();
+    }
+}
