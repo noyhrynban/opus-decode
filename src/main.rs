@@ -1,3 +1,4 @@
+
 // The basic structure of this was started from
 // https://github.com/RustAudio/ogg/blob/master/examples/dump-all.rs
 
@@ -55,6 +56,11 @@ mod tests {
     #[should_panic]
     fn it_should_fail_to_run_with_no_file() {
         run("".to_string()).unwrap();
+    }
+
+    #[test]
+    fn it_should_run_but_fail() {
+        run("test_files/corrupt.opus".to_string()).unwrap();
     }
 
     #[test]
