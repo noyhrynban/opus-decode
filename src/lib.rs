@@ -73,6 +73,7 @@ pub fn packet_config_from_toc_byte(toc_byte: u8) -> Result<PacketConfiguration, 
                         1 => frame_size = 20.0,
                         2 => frame_size = 40.0,
                         3 => frame_size = 60.0,
+                        #[cfg_attr(tarpaulin, skip)]
                         _ => return Err("match_code_byte_failed impossibly"),
                     }
                 }
@@ -83,6 +84,7 @@ pub fn packet_config_from_toc_byte(toc_byte: u8) -> Result<PacketConfiguration, 
                         5 => frame_size = 20.0,
                         6 => frame_size = 40.0,
                         7 => frame_size = 60.0,
+                        #[cfg_attr(tarpaulin, skip)]
                         _ => return Err("match_code_byte_failed impossibly"),
                     }
                 }
@@ -93,9 +95,11 @@ pub fn packet_config_from_toc_byte(toc_byte: u8) -> Result<PacketConfiguration, 
                         9 => frame_size = 20.0,
                         10 => frame_size = 40.0,
                         11 => frame_size = 60.0,
+                        #[cfg_attr(tarpaulin, skip)]
                         _ => return Err("match_code_byte_failed impossibly"),
                     }
                 }
+                #[cfg_attr(tarpaulin, skip)]
                 _ => return Err("match_code_byte_failed impossibly"),
             }
         }
@@ -107,6 +111,7 @@ pub fn packet_config_from_toc_byte(toc_byte: u8) -> Result<PacketConfiguration, 
                     match config_val {
                         12 => frame_size = 10.0,
                         13 => frame_size = 20.0,
+                        #[cfg_attr(tarpaulin, skip)]
                         _ => return Err("match_code_byte_failed impossibly"),
                     }
                 }
@@ -115,9 +120,11 @@ pub fn packet_config_from_toc_byte(toc_byte: u8) -> Result<PacketConfiguration, 
                     match config_val {
                         14 => frame_size = 10.0,
                         15 => frame_size = 20.0,
+                        #[cfg_attr(tarpaulin, skip)]
                         _ => return Err("match_code_byte_failed impossibly"),
                     }
                 }
+                #[cfg_attr(tarpaulin, skip)]
                 _ => return Err("match_code_byte_failed impossibly"),
             }
         }
@@ -131,6 +138,7 @@ pub fn packet_config_from_toc_byte(toc_byte: u8) -> Result<PacketConfiguration, 
                         17 => frame_size = 5.0,
                         18 => frame_size = 10.0,
                         19 => frame_size = 20.0,
+                        #[cfg_attr(tarpaulin, skip)]
                         _ => return Err("match_code_byte_failed impossibly"),
                     }
                 }
@@ -141,6 +149,7 @@ pub fn packet_config_from_toc_byte(toc_byte: u8) -> Result<PacketConfiguration, 
                         21 => frame_size = 5.0,
                         22 => frame_size = 10.0,
                         23 => frame_size = 20.0,
+                        #[cfg_attr(tarpaulin, skip)]
                         _ => return Err("match_code_byte_failed impossibly"),
                     }
                 }
@@ -151,6 +160,7 @@ pub fn packet_config_from_toc_byte(toc_byte: u8) -> Result<PacketConfiguration, 
                         25 => frame_size = 5.0,
                         26 => frame_size = 10.0,
                         27 => frame_size = 20.0,
+                        #[cfg_attr(tarpaulin, skip)]
                         _ => return Err("match_code_byte_failed impossibly"),
                     }
                 }
@@ -161,18 +171,22 @@ pub fn packet_config_from_toc_byte(toc_byte: u8) -> Result<PacketConfiguration, 
                         29 => frame_size = 5.0,
                         30 => frame_size = 10.0,
                         31 => frame_size = 20.0,
+                        #[cfg_attr(tarpaulin, skip)]
                         _ => return Err("match_code_byte_failed impossibly"),
                     }
                 }
+                #[cfg_attr(tarpaulin, skip)]
                 _ => return Err("match_code_byte_failed impossibly"),
             }
         }
+        #[cfg_attr(tarpaulin, skip)]
         _ => return Err("match_code_byte_failed impossibly"),
     }
 
     let signal: Signal = match (toc_byte >> 4) & 0b0001 {
         0 => Signal::Mono,
         1 => Signal::Stereo,
+        #[cfg_attr(tarpaulin, skip)]
         _ => return Err("match_code_byte_failed impossibly"),
     };
 
@@ -181,6 +195,7 @@ pub fn packet_config_from_toc_byte(toc_byte: u8) -> Result<PacketConfiguration, 
         1 => FrameCountCode::TwoEqual,
         2 => FrameCountCode::TwoDifferent,
         3 => FrameCountCode::Arbitrary,
+        #[cfg_attr(tarpaulin, skip)]
         _ => return Err("match_code_byte_failed impossibly"),
     };
 
