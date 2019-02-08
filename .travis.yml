@@ -13,17 +13,15 @@ matrix:
     - rust: nightly
   fast_finish: true
 
-cache: cargo
-
 addons:
   apt:
     packages:
       - libssl-dev
 
-before_cache: |
-  if [[ "$TRAVIS_RUST_VERSION" == nightly ]]; then
-    RUSTFLAGS="--cfg procmacro2_semver_exempt" cargo install cargo-tarpaulin -f
-  fi
+cache: cargo
+
+install:
+  - cargo tarpaulin --version || cargo install cargo-tarpaulin
 
 before_script:
   - rustup component add clippy
