@@ -21,7 +21,9 @@ addons:
 cache: cargo
 
 install:
-  - cargo tarpaulin --version || cargo install cargo-tarpaulin
+  - if [[ "$TRAVIS_RUST_VERSION" == nightly ]]; then 
+      cargo tarpaulin --version || cargo install cargo-tarpaulin
+    fi
 
 before_script:
   - rustup component add clippy
