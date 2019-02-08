@@ -9,16 +9,16 @@ use std::fs::File;
 
 #[cfg_attr(tarpaulin, skip)]
 fn main() {
-    match run() {
+    let file_path = env::args()
+        .nth(1)
+        .expect("No arg found. Please specify a file to open.");
+    match run(file_path) {
         Ok(_) => (),
         Err(err) => println!("Error: {}", err),
     }
 }
 
-fn run() -> Result<(), std::io::Error> {
-    let file_path = env::args()
-        .nth(1)
-        .expect("No arg found. Please specify a file to open.");
+fn run(file_path: String) -> Result<(), std::io::Error> {
     println!("Opening file: {}", file_path);
     let mut file = File::open(file_path)?;
     let mut packet_reader = PacketReader::new(&mut file);
@@ -53,7 +53,12 @@ mod tests {
 
     #[test]
     #[should_panic]
+    fn it_should_fail_to_run_with_no_file() {
+        run("".to_string()).unwrap();
+    }
+
+    #[test]
     fn it_should_run() {
-        run().unwrap();
+        run("test_files/tiny.opus".to_string()).unwrap();
     }
 }
