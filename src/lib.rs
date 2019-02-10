@@ -52,8 +52,8 @@ pub struct PacketConfiguration {
 }
 
 pub struct OpusPacket {
-    config: PacketConfiguration,
-    data: Vec<u8>,
+    pub config: PacketConfiguration,
+    pub data: Vec<u8>,
 }
 
 pub fn packet_config_from_toc_byte(toc_byte: u8) -> Result<PacketConfiguration, &'static str> {
@@ -201,5 +201,28 @@ pub fn get_opus_packet(packet_data: Vec<u8>) -> Result<OpusPacket, &'static str>
         })
     } else {
         Err("splitting the packet into a TOC byte and data failed")
+    }
+}
+
+mod tests {
+    #[test]
+    fn it_creates_packet_config_from_u8() {
+        for byte in 0..255 {
+            println!("Byte is: {}", byte);
+            let config = super::packet_config_from_toc_byte(byte);
+            assert!(config.is_ok());
+        }
+    }
+
+    #[test]
+    fn it_should_create_opus_packet() {
+        let bytes = vec![0, 0];
+        assert_eq!(true, super::get_opus_packet(bytes).is_ok())
+    }
+
+    #[test]
+    #[should_panic]
+    fn it_creates_opus_packet_from_vec_u8() {
+        super::get_opus_packet([].to_vec()).unwrap(); // Don't care about the result since it should fail
     }
 }

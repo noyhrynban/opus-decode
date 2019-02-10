@@ -13,16 +13,16 @@ matrix:
     - rust: nightly
   fast_finish: true
 
-cache: cargo
-
 addons:
   apt:
     packages:
       - libssl-dev
 
-before_cache: |
+cache: cargo
+
+install: |
   if [[ "$TRAVIS_RUST_VERSION" == nightly ]]; then
-    RUSTFLAGS="--cfg procmacro2_semver_exempt" cargo install cargo-tarpaulin -f
+    cargo tarpaulin --version || cargo install cargo-tarpaulin
   fi
 
 before_script:
