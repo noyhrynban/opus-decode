@@ -1,3 +1,4 @@
+
 // The basic structure of this was started from
 // https://github.com/RustAudio/ogg/blob/master/examples/dump-all.rs
 
@@ -33,8 +34,6 @@ fn run(file_path: String) -> Result<(), std::io::Error> {
                 let opus_bytes = &ogg_packet.data;
                 let p = &ogg_packet;
 
-                // println!("\nPacket: serial 0x{:08x}, data {:08} large, first {: >5}, last {: >5}, absgp 0x{:016x}",p.stream_serial(), p.data.len(), p.first_in_page(), p.last_in_page(),p.absgp_page());
-
                 let opus_packet = opus_decode::get_opus_packet(opus_bytes.to_vec()).unwrap();
 
                 println!(
@@ -45,8 +44,6 @@ fn run(file_path: String) -> Result<(), std::io::Error> {
                     opus_packet.config.signal,
                     opus_packet.config.code
                 );
-
-                println!("{:?}", p.data);
 
                 // next we will call some funtion that takes the Vec<u8> and returns an OPUS packet struct
             }
@@ -81,20 +78,5 @@ mod tests {
     #[test]
     fn it_should_run() {
         run("test_files/tiny.opus".to_string()).unwrap();
-    }
-
-    #[test]
-    fn it_should_run_a_real_file_mono() {
-        run("test_files/215-mono-10.opus".to_string()).unwrap();
-    }
-
-    #[test]
-    fn it_should_run_a_real_file_12() {
-        run("test_files/215-12.opus".to_string()).unwrap();
-    }
-
-    #[test]
-    fn it_should_run_a_real_file_128() {
-        run("test_files/215-128.opus".to_string()).unwrap();
     }
 }
