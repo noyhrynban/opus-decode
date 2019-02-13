@@ -32,8 +32,6 @@ fn run(file_path: String) -> Result<(), std::io::Error> {
         match r {
             Ok(Some(ogg_packet)) => {
                 let opus_bytes = &ogg_packet.data;
-                let p = &ogg_packet;
-
                 let opus_packet = opus_decode::get_opus_packet(opus_bytes.to_vec()).unwrap();
 
                 println!(
@@ -44,8 +42,6 @@ fn run(file_path: String) -> Result<(), std::io::Error> {
                     opus_packet.config.signal,
                     opus_packet.config.code
                 );
-
-                // next we will call some funtion that takes the Vec<u8> and returns an OPUS packet struct
             }
             // End of stream
             Ok(None) => break,
@@ -85,8 +81,13 @@ mod tests {
         run("test_files/tone-40ms.opus".to_string()).unwrap();
     }
 
-        #[test]
+    #[test]
     fn it_should_run_a_real_file_more_than_2_frames_per_packet() {
         run("test_files/tone-60ms.opus".to_string()).unwrap();
+    }
+
+    #[test]
+    fn it_should_run_a_real_file_more_than_2_frames_per_packet_and_lots_of_padding() {
+        run("test_files/silence-60ms-1000.opus".to_string()).unwrap();
     }
 }
