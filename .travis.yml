@@ -30,7 +30,7 @@ install: |
 
 script:
   - cargo clean
-  - cargo clippy --verbose
+  # - cargo clippy --verbose
   - cargo build --verbose
   - cargo test --verbose
 
