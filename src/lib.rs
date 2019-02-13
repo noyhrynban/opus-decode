@@ -1,4 +1,4 @@
-// #[derive(Debug)]
+#[derive(Debug)]
 pub enum PacketMode {
     SILK,   // low bandwidth algorithm
     Hybrid, // both SILK and CELT
@@ -19,7 +19,7 @@ pub enum PacketMode {
 // |                      |                 |                         |
 // | FB (fullband)        |      20 kHz (*) |                  48 kHz |
 // +----------------------+-----------------+-------------------------+
-// #[derive(Debug)]
+#[derive(Debug)]
 pub enum Bandwidth {
     Narrow,
     Medium,
@@ -28,13 +28,13 @@ pub enum Bandwidth {
     Full,
 }
 
-// #[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Signal {
     Mono,
     Stereo,
 }
 
-// #[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum FrameCountCode {
     Single,
     TwoEqual,
@@ -42,7 +42,11 @@ pub enum FrameCountCode {
     Arbitrary,
 }
 
-// #[derive(Debug)]
+pub struct Frame {
+    pub data: Vec<u8>,
+}
+
+#[derive(Debug)]
 pub struct PacketConfiguration {
     pub mode: PacketMode,
     pub bandwidth: Bandwidth,
@@ -53,11 +57,11 @@ pub struct PacketConfiguration {
 
 pub struct OpusPacket {
     pub config: PacketConfiguration,
-    pub data: Vec<u8>,
+    pub frames: Vec<Frame>,
 }
 
 pub fn packet_config_from_toc_byte(toc_byte: u8) -> Result<PacketConfiguration, &'static str> {
-    let config_val: u8 = 0b0001_1111 & toc_byte;
+    let config_val: u8 = toc_byte >> 3;
 
     let mode: PacketMode;
     let bandwidth: Bandwidth;
@@ -73,7 +77,7 @@ pub fn packet_config_from_toc_byte(toc_byte: u8) -> Result<PacketConfiguration, 
                         1 => frame_size = 20.0,
                         2 => frame_size = 40.0,
                         3 => frame_size = 60.0,
-                        _ => return Err("match_code_byte_failed impossibly"),
+                        _ => unimplemented!("match_code_byte_failed impossibly"),
                     }
                 }
                 4...7 => {
@@ -83,7 +87,7 @@ pub fn packet_config_from_toc_byte(toc_byte: u8) -> Result<PacketConfiguration, 
                         5 => frame_size = 20.0,
                         6 => frame_size = 40.0,
                         7 => frame_size = 60.0,
-                        _ => return Err("match_code_byte_failed impossibly"),
+                        _ => unimplemented!("match_code_byte_failed impossibly"),
                     }
                 }
                 8...11 => {
@@ -93,10 +97,10 @@ pub fn packet_config_from_toc_byte(toc_byte: u8) -> Result<PacketConfiguration, 
                         9 => frame_size = 20.0,
                         10 => frame_size = 40.0,
                         11 => frame_size = 60.0,
-                        _ => return Err("match_code_byte_failed impossibly"),
+                        _ => unimplemented!("match_code_byte_failed impossibly"),
                     }
                 }
-                _ => return Err("match_code_byte_failed impossibly"),
+                _ => unimplemented!("match_code_byte_failed impossibly"),
             }
         }
         12...15 => {
@@ -107,7 +111,7 @@ pub fn packet_config_from_toc_byte(toc_byte: u8) -> Result<PacketConfiguration, 
                     match config_val {
                         12 => frame_size = 10.0,
                         13 => frame_size = 20.0,
-                        _ => return Err("match_code_byte_failed impossibly"),
+                        _ => unimplemented!("match_code_byte_failed impossibly"),
                     }
                 }
                 14...15 => {
@@ -115,10 +119,10 @@ pub fn packet_config_from_toc_byte(toc_byte: u8) -> Result<PacketConfiguration, 
                     match config_val {
                         14 => frame_size = 10.0,
                         15 => frame_size = 20.0,
-                        _ => return Err("match_code_byte_failed impossibly"),
+                        _ => unimplemented!("match_code_byte_failed impossibly"),
                     }
                 }
-                _ => return Err("match_code_byte_failed impossibly"),
+                _ => unimplemented!("match_code_byte_failed impossibly"),
             }
         }
         16...31 => {
@@ -131,7 +135,7 @@ pub fn packet_config_from_toc_byte(toc_byte: u8) -> Result<PacketConfiguration, 
                         17 => frame_size = 5.0,
                         18 => frame_size = 10.0,
                         19 => frame_size = 20.0,
-                        _ => return Err("match_code_byte_failed impossibly"),
+                        _ => unimplemented!("match_code_byte_failed impossibly"),
                     }
                 }
                 20...23 => {
@@ -141,7 +145,7 @@ pub fn packet_config_from_toc_byte(toc_byte: u8) -> Result<PacketConfiguration, 
                         21 => frame_size = 5.0,
                         22 => frame_size = 10.0,
                         23 => frame_size = 20.0,
-                        _ => return Err("match_code_byte_failed impossibly"),
+                        _ => unimplemented!("match_code_byte_failed impossibly"),
                     }
                 }
                 24...27 => {
@@ -151,7 +155,7 @@ pub fn packet_config_from_toc_byte(toc_byte: u8) -> Result<PacketConfiguration, 
                         25 => frame_size = 5.0,
                         26 => frame_size = 10.0,
                         27 => frame_size = 20.0,
-                        _ => return Err("match_code_byte_failed impossibly"),
+                        _ => unimplemented!("match_code_byte_failed impossibly"),
                     }
                 }
                 28...31 => {
@@ -161,22 +165,22 @@ pub fn packet_config_from_toc_byte(toc_byte: u8) -> Result<PacketConfiguration, 
                         29 => frame_size = 5.0,
                         30 => frame_size = 10.0,
                         31 => frame_size = 20.0,
-                        _ => return Err("match_code_byte_failed impossibly"),
+                        _ => unimplemented!("match_code_byte_failed impossibly"),
                     }
                 }
-                _ => return Err("match_code_byte_failed impossibly"),
+                _ => unimplemented!("match_code_byte_failed impossibly"),
             }
         }
-        _ => return Err("match_code_byte_failed impossibly"),
+        _ => unimplemented!("match_code_byte_failed impossibly"),
     }
 
-    let signal: Signal = match (toc_byte >> 4) & 0b0001 {
+    let signal: Signal = match (toc_byte & 0b100) >> 2 {
         0 => Signal::Mono,
         1 => Signal::Stereo,
         _ => return Err("match_code_byte_failed impossibly"),
     };
 
-    let code: FrameCountCode = match toc_byte >> 6 {
+    let code: FrameCountCode = match toc_byte & 0b0000_0011 {
         0 => FrameCountCode::Single,
         1 => FrameCountCode::TwoEqual,
         2 => FrameCountCode::TwoDifferent,
@@ -195,9 +199,40 @@ pub fn packet_config_from_toc_byte(toc_byte: u8) -> Result<PacketConfiguration, 
 
 pub fn get_opus_packet(packet_data: Vec<u8>) -> Result<OpusPacket, &'static str> {
     if let Some((toc_byte, data)) = packet_data.split_first() {
+        let config = packet_config_from_toc_byte(*toc_byte).unwrap();
+        let data = data.to_vec();
+        let frames = vec![];
+        match config.code {
+            FrameCountCode::Single => vec![Frame { data }], // code 0
+            FrameCountCode::TwoEqual => {
+                // code 1
+                println!("Data length: {}", data.len());
+                let (one, two) = data.split_at(data.len() / 2);
+                vec![Frame { data: one.to_vec() }, Frame { data: two.to_vec() }]
+            }
+            FrameCountCode::TwoDifferent => {
+                // code 2
+                let (size, mut data) = data.split_first().unwrap();
+                println!("size: {}, data len: {}", size, data.len());
+                let mut size = usize::from(*size);
+                if size > 251 {
+                    let tuple = data.split_first().unwrap();
+                    data = tuple.1;
+                    size += usize::from(*tuple.0) * 4;
+                }
+
+                let (one, two) = data.split_at(size);
+                vec![Frame { data: one.to_vec() }, Frame { data: two.to_vec() }]
+            }
+            FrameCountCode::Arbitrary => {
+                // code 3
+                vec![]
+            }
+        };
+
         Ok(OpusPacket {
-            config: packet_config_from_toc_byte(*toc_byte).unwrap(),
-            data: data.to_vec(),
+            config,
+            frames,
         })
     } else {
         Err("splitting the packet into a TOC byte and data failed")
@@ -205,10 +240,34 @@ pub fn get_opus_packet(packet_data: Vec<u8>) -> Result<OpusPacket, &'static str>
 }
 
 mod tests {
+
+    #[test]
+    fn it_should_recognize_stereo() {
+        let config = super::packet_config_from_toc_byte(0b0000_0100).unwrap();
+        assert_eq!(config.signal, super::Signal::Stereo);
+    }
+
+    #[test]
+    fn it_should_recognize_code_1() {
+        let config = super::packet_config_from_toc_byte(0b0000_0001).unwrap();
+        assert_eq!(config.code, super::FrameCountCode::TwoEqual);
+    }
+
+    #[test]
+    fn it_should_recognize_code_2() {
+        let config = super::packet_config_from_toc_byte(0b0000_0010).unwrap();
+        assert_eq!(config.code, super::FrameCountCode::TwoDifferent);
+    }
+
+    #[test]
+    fn it_should_recognize_code_3() {
+        let config = super::packet_config_from_toc_byte(0b0000_0011).unwrap();
+        assert_eq!(config.code, super::FrameCountCode::Arbitrary);
+    }
+
     #[test]
     fn it_creates_packet_config_from_u8() {
         for byte in 0..255 {
-            println!("Byte is: {}", byte);
             let config = super::packet_config_from_toc_byte(byte);
             assert!(config.is_ok());
         }
@@ -223,6 +282,6 @@ mod tests {
     #[test]
     #[should_panic]
     fn it_creates_opus_packet_from_vec_u8() {
-        super::get_opus_packet([].to_vec()).unwrap(); // Don't care about the result since it should fail
+        super::get_opus_packet([].to_vec()).unwrap();
     }
 }
