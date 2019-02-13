@@ -79,4 +79,14 @@ mod tests {
     fn it_should_run() {
         run("test_files/tiny.opus".to_string()).unwrap();
     }
+
+    #[test]
+    fn it_should_run_a_real_file_2_frames_per_packet() {
+        run("test_files/tone-40ms.opus".to_string()).unwrap();
+    }
+
+        #[test]
+    fn it_should_run_a_real_file_more_than_2_frames_per_packet() {
+        run("test_files/tone-60ms.opus".to_string()).unwrap();
+    }
 }
