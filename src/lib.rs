@@ -63,9 +63,11 @@ pub struct OpusPacket {
 pub fn packet_config_from_toc_byte(toc_byte: u8) -> Result<PacketConfiguration, &'static str> {
     let config_val: u8 = toc_byte >> 3;
 
-    let mode: PacketMode;
     let bandwidth: Bandwidth;
+    let code: FrameCountCode;
     let frame_size: f32;
+    let mode: PacketMode;
+    let signal: Signal;
     match config_val {
         0...11 => {
             mode = PacketMode::SILK;
@@ -174,26 +176,27 @@ pub fn packet_config_from_toc_byte(toc_byte: u8) -> Result<PacketConfiguration, 
         _ => unimplemented!("match_code_byte_failed impossibly"),
     }
 
-    let signal: Signal = match (toc_byte & 0b100) >> 2 {
-        0 => Signal::Mono,
-        1 => Signal::Stereo,
-        _ => return Err("match_code_byte_failed impossibly"),
+    match (toc_byte & 0b100) >> 2 {
+        0 => signal = Signal::Mono,
+        1 => signal = Signal::Stereo,
+        _ => unimplemented!("match_code_byte_failed impossibly"),
     };
 
-    let code: FrameCountCode = match toc_byte & 0b0000_0011 {
-        0 => FrameCountCode::Single,
-        1 => FrameCountCode::TwoEqual,
-        2 => FrameCountCode::TwoDifferent,
-        3 => FrameCountCode::Arbitrary,
-        _ => return Err("match_code_byte_failed impossibly"),
+    match toc_byte & 0b0000_0011 {
+        0 => code = FrameCountCode::Single,
+        1 => code = FrameCountCode::TwoEqual,
+        2 => code = FrameCountCode::TwoDifferent,
+        3 => code = FrameCountCode::Arbitrary,
+        _ => unimplemented!("match_code_byte_failed impossibly"),
+
     };
 
     Ok(PacketConfiguration {
-        mode,
         bandwidth,
-        frame_size,
-        signal,
         code,
+        frame_size,
+        mode,
+        signal,
     })
 }
 
@@ -201,19 +204,18 @@ pub fn get_opus_packet(packet_data: Vec<u8>) -> Result<OpusPacket, &'static str>
     if let Some((toc_byte, data)) = packet_data.split_first() {
         let config = packet_config_from_toc_byte(*toc_byte).unwrap();
         let data = data.to_vec();
-        let frames = vec![];
-        match config.code {
+        let frames = match config.code {
             FrameCountCode::Single => vec![Frame { data }], // code 0
             FrameCountCode::TwoEqual => {
                 // code 1
-                println!("Data length: {}", data.len());
+                assert!(data.len() % 2 == 0);
                 let (one, two) = data.split_at(data.len() / 2);
                 vec![Frame { data: one.to_vec() }, Frame { data: two.to_vec() }]
             }
             FrameCountCode::TwoDifferent => {
                 // code 2
                 let (size, mut data) = data.split_first().unwrap();
-                println!("size: {}, data len: {}", size, data.len());
+
                 let mut size = usize::from(*size);
                 if size > 251 {
                     let tuple = data.split_first().unwrap();
@@ -226,14 +228,72 @@ pub fn get_opus_packet(packet_data: Vec<u8>) -> Result<OpusPacket, &'static str>
             }
             FrameCountCode::Arbitrary => {
                 // code 3
-                vec![]
+                let (frame_count_byte, mut data) = data.split_first().unwrap();
+                let frame_count_byte = *frame_count_byte;
+                let frame_count = frame_count_byte & 0b0011_1111;
+                let padded = (frame_count_byte >> 6) & 0b0000_0001 == 1;
+                let vbr = (frame_count_byte >> 7) & 0b0000_0001 == 1;
+
+                if padded {
+                    // remove the padding at the end of the packet
+                    let (mut first, mut new_data_window) = data.split_first().unwrap();
+                    data = new_data_window;
+                    let mut total_padding_length: usize = 0;
+                    let mut padding_length = *first;
+                    while padding_length == 255 {
+                        total_padding_length += 254;
+                        let tuple = new_data_window.split_first().unwrap();
+                        first = tuple.0;
+                        new_data_window = tuple.1;
+                        padding_length = *first;
+                        data = new_data_window;
+                    }
+                    total_padding_length += usize::from(padding_length);
+                    let (frame_data, _padding) = data.split_at(data.len() - total_padding_length);
+                    data = frame_data;
+                }
+
+                if vbr {
+                    // VBR frames
+                    let mut frame_sizes: Vec<usize> = vec![];
+                    let mut frames: Vec<Frame> = vec![];
+                    for _ in 0..(frame_count - 1) {
+                        let (size_byte, mut data_window) = data.split_first().unwrap();
+                        let mut frame_size: usize = usize::from(*size_byte);
+                        if *size_byte == 255 {
+                            let tuple = data_window.split_first().unwrap();
+                            frame_size += usize::from(*tuple.0);
+                            data_window = tuple.1;
+                        }
+                        frame_sizes.push(frame_size);
+                        data = data_window;
+                    }
+                    for frame_number in 0..frame_count - 1 {
+                        let tuple = data.split_at(frame_sizes[usize::from(frame_number)]);
+                        frames.push(Frame {
+                            data: tuple.0.to_vec(),
+                        });
+                        data = tuple.1;
+                    }
+                    frames.push(Frame {
+                        data: data.to_vec(),
+                    });
+                    assert_eq!(usize::from(frame_count), frames.len());
+                    frames
+                } else {
+                    // CBR frames
+                    assert!((data.len() % usize::from(frame_count)) == 0);
+                    let framesize = data.len() / usize::from(frame_count);
+                    data.chunks(framesize)
+                        .map(|chunk| Frame {
+                            data: chunk.to_vec(),
+                        })
+                        .collect()
+                }
             }
         };
 
-        Ok(OpusPacket {
-            config,
-            frames,
-        })
+        Ok(OpusPacket { config, frames })
     } else {
         Err("splitting the packet into a TOC byte and data failed")
     }
