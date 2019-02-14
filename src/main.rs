@@ -32,6 +32,7 @@ fn run(file_path: String) -> Result<(), std::io::Error> {
         match r {
             Ok(Some(ogg_packet)) => {
                 let opus_bytes = &ogg_packet.data;
+
                 let opus_packet = opus_decode::get_opus_packet(opus_bytes.to_vec()).unwrap();
 
                 println!(

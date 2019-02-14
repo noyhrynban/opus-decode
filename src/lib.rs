@@ -188,6 +188,7 @@ pub fn packet_config_from_toc_byte(toc_byte: u8) -> Result<PacketConfiguration, 
         2 => code = FrameCountCode::TwoDifferent,
         3 => code = FrameCountCode::Arbitrary,
         _ => unimplemented!("match_code_byte_failed impossibly"),
+
     };
 
     Ok(PacketConfiguration {
@@ -214,6 +215,7 @@ pub fn get_opus_packet(packet_data: Vec<u8>) -> Result<OpusPacket, &'static str>
             FrameCountCode::TwoDifferent => {
                 // code 2
                 let (size, mut data) = data.split_first().unwrap();
+
                 let mut size = usize::from(*size);
                 if size > 251 {
                     let tuple = data.split_first().unwrap();
