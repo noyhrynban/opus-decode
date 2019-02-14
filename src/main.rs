@@ -35,13 +35,17 @@ fn run(file_path: String) -> Result<(), std::io::Error> {
                 let opus_packet = opus_decode::get_opus_packet(opus_bytes.to_vec()).unwrap();
 
                 println!(
-                    "{:?}\t{:?}\t{:?}\t{:?}\t{:?}",
+                    "\n{:?}\t{:?}\t{:?}\t{:?}\t{:?}",
                     opus_packet.config.mode,
                     opus_packet.config.bandwidth,
                     opus_packet.config.frame_size,
                     opus_packet.config.signal,
                     opus_packet.config.code
                 );
+
+                for frame in opus_packet.frames{
+                    println!("Frame bytes:\n{:?}", frame.data);
+                }
             }
             // End of stream
             Ok(None) => break,
@@ -52,7 +56,7 @@ fn run(file_path: String) -> Result<(), std::io::Error> {
         }
         counter += 1;
     }
-    println!("Found {} packets.", counter);
+    println!("\nFound {} packets.", counter);
     Ok(())
 }
 
