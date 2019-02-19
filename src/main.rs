@@ -37,15 +37,53 @@ fn run(file_path: String) -> Result<(), std::io::Error> {
     let mut file = File::open(file_path)?;
     let mut packet_reader = PacketReader::new(&mut file);
     let _header = packet_reader.read_packet(); // This packet should be verified to be the OpusHeader packet, at most
-    let _comments_header = packet_reader.read_packet(); // This is where the Metadata is stored. Maybe we'll parse this out someday.
+    let comments_header = packet_reader.read_packet(); // This is where the Metadata is stored. Maybe we'll parse this out someday.
 
+    print_meta_data(comments_header.unwrap().unwrap().data);
+
+    let mut counter = 0;
+    loop {
+        let r = packet_reader.read_packet();
+        match r {
+            Ok(Some(ogg_packet)) => {
+                let opus_bytes = &ogg_packet.data;
+
+                let opus_packet = opus_decode::get_opus_packet(opus_bytes.to_vec()).unwrap();
+
+                println!(
+                    "\n{:?}\t{:?}\t{:?}\t{:?}\t{:?}",
+                    opus_packet.config.mode,
+                    opus_packet.config.bandwidth,
+                    opus_packet.config.frame_size,
+                    opus_packet.config.signal,
+                    opus_packet.config.code
+                );
+
+                for frame in opus_packet.frames {
+                    println!("Frame bytes:\n{:?}", frame.data);
+                }
+            }
+            // End of stream
+            Ok(None) => break,
+            Err(e) => {
+                println!("Encountered Error: {:?}", e);
+                break;
+            }
+        }
+        counter += 1;
+    }
+    println!("\nFound {} packets.", counter);
+    Ok(())
+}
+
+fn print_meta_data(comments_bytes: Vec<u8>) {
     let mut meta = AlbumInfo {
         track: String::from(" "),
         artist: String::from(" "),
         album: String::from(" "),
     };
 
-    let comment_bytes = _comments_header.unwrap().unwrap().data;
+    let comment_bytes = comments_bytes;
     let mut index = 8;
     let mut metadata: Vec<FieldData> = vec![];
 
@@ -76,8 +114,12 @@ fn run(file_path: String) -> Result<(), std::io::Error> {
         let length = Cursor::new(element.unwrap())
             .read_u32::<LittleEndian>()
             .unwrap();
-        data = comment_bytes.get(index..(index + length as usize));
-        let (left, right) = data.unwrap().split_at(0x3d);
+        println!("{:?}",comment_bytes);
+        let data = &comment_bytes[index..(index + length as usize)];
+        if data.is_empty() {
+            break;
+        }
+        let (left, right) = data.split_at(0x3d);
         let title = std::str::from_utf8(left).unwrap();
         let information = FieldData {
             name: String::from(title),
@@ -86,43 +128,9 @@ fn run(file_path: String) -> Result<(), std::io::Error> {
         metadata.push(information);
         index = index + length as usize + 1;
     }
-    for item in metadata{
+    for item in metadata {
         println!("name: {}", item.name);
     }
-
-    let mut counter = 0;
-    loop {
-        let r = packet_reader.read_packet();
-        match r {
-            Ok(Some(ogg_packet)) => {
-                let opus_bytes = &ogg_packet.data;
-
-                let opus_packet = opus_decode::get_opus_packet(opus_bytes.to_vec()).unwrap();
-
-                println!(
-                    "\n{:?}\t{:?}\t{:?}\t{:?}\t{:?}",
-                    opus_packet.config.mode,
-                    opus_packet.config.bandwidth,
-                    opus_packet.config.frame_size,
-                    opus_packet.config.signal,
-                    opus_packet.config.code
-                );
-
-                for frame in opus_packet.frames{
-                    println!("Frame bytes:\n{:?}", frame.data);
-                }
-            }
-            // End of stream
-            Ok(None) => break,
-            Err(e) => {
-                println!("Encountered Error: {:?}", e);
-                break;
-            }
-        }
-        counter += 1;
-    }
-    println!("\nFound {} packets.", counter);
-    Ok(())
 }
 
 #[cfg(test)]
