@@ -25,12 +25,12 @@ install: |
     cargo tarpaulin --version || cargo install cargo-tarpaulin
   fi
 
-before_script:
-  - rustup component add clippy
+# before_script:
+#   - rustup component add clippy
 
 script:
   - cargo clean
-  - cargo clippy --verbose
+  # - cargo clippy --verbose
   - cargo build --verbose
   - cargo test --verbose
 
