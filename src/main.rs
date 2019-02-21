@@ -47,7 +47,7 @@ fn run(file_path: String) -> Result<(), std::io::Error> {
         match r {
             Ok(Some(ogg_packet)) => {
                 let opus_bytes = &ogg_packet.data;
-
+                
                 let opus_packet = opus_decode::get_opus_packet(opus_bytes.to_vec()).unwrap();
 
                 println!(
@@ -82,14 +82,14 @@ fn print_meta_data(comments_bytes: Vec<u8>) {
         artist: String::from(" "),
         album: String::from(" "),
     };
-
+    println!("Begin debug!");
     let comment_bytes = comments_bytes;
     let mut index = 8;
     let mut metadata: Vec<FieldData> = vec![];
-
+    println!("metadata vector created!");
     let mut element = comment_bytes.get(index..index + 4);
     index += 4;
-    let length = Cursor::new(element.unwrap())
+    let mut length = Cursor::new(element.unwrap())
         .read_u32::<LittleEndian>()
         .unwrap();
     let mut data = comment_bytes.get(index..(index + length as usize));
@@ -98,28 +98,33 @@ fn print_meta_data(comments_bytes: Vec<u8>) {
         info: Vec::from(data.unwrap()),
     };
     metadata.push(vendor);
-
+    println!("Debug: Vendor!");
     index = index + length as usize + 1;
 
     element = comment_bytes.get(index..index + 4);
-    let length = Cursor::new(element.unwrap())
+    length = Cursor::new(element.unwrap())
         .read_u32::<LittleEndian>()
         .unwrap();
 
     let list = length;
+    println!("List length: {}", length);
     index += 4;
     for comment in 0..list {
         element = comment_bytes.get(index..index + 4);
         index += 4;
-        let length = Cursor::new(element.unwrap())
+        length = Cursor::new(element.unwrap())
             .read_u32::<LittleEndian>()
             .unwrap();
+        println!("Length: {}, Index: {}", length, index);
         println!("{:?}",comment_bytes);
+        println!("End Comment Bytes!");
         let data = &comment_bytes[index..(index + length as usize)];
+        println!("Got data!");
         if data.is_empty() {
             break;
         }
-        let (left, right) = data.split_at(0x3d);
+        let split = data.iter().position(|&x| x == 0x3d);
+        let (left, right) = data.split_at(split.unwrap());
         let title = std::str::from_utf8(left).unwrap();
         let information = FieldData {
             name: String::from(title),
