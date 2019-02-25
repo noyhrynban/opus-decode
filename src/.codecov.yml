@@ -8,3 +8,7 @@ coverage:
         # basic
         target: 95
         base: auto
+    patch:
+      default:
+        target: 90
+        base: auto
