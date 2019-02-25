@@ -9,18 +9,6 @@ use std::env;
 use std::fs::File;
 use std::io::Cursor;
 
-struct AlbumInfo {
-    //Struct for storing the metadata per file
-    track: String,
-    artist: String,
-    album: String,
-}
-
-struct FieldData {
-    name: String,
-    info: Vec<u8>,
-}
-
 #[cfg_attr(tarpaulin, skip)]
 fn main() {
     let file_path = env::args()
@@ -47,7 +35,7 @@ fn run(file_path: String) -> Result<(), std::io::Error> {
         match r {
             Ok(Some(ogg_packet)) => {
                 let opus_bytes = &ogg_packet.data;
-                
+
                 let opus_packet = opus_decode::get_opus_packet(opus_bytes.to_vec()).unwrap();
 
                 println!(
@@ -77,64 +65,66 @@ fn run(file_path: String) -> Result<(), std::io::Error> {
 }
 
 fn print_meta_data(comments_bytes: Vec<u8>) {
-    let mut meta = AlbumInfo {
-        track: String::from(" "),
-        artist: String::from(" "),
-        album: String::from(" "),
-    };
-    println!("Begin debug!");
-    let comment_bytes = comments_bytes;
-    let mut index = 8;
+    struct AlbumInfo {
+        //Struct for storing the metadata per file
+        track: String,
+        artist: String,
+        album: String,
+    }
+
+    struct FieldData {
+        name: String,
+        info: Vec<u8>,
+    }
+
+    let mut index = 8; // start at 8 to skip 'Opustags'
     let mut metadata: Vec<FieldData> = vec![];
-    println!("metadata vector created!");
-    let mut element = comment_bytes.get(index..index + 4);
-    index += 4;
-    let mut length = Cursor::new(element.unwrap())
+
+    let mut comment_length = Cursor::new(&comments_bytes[index..index + 4])
         .read_u32::<LittleEndian>()
         .unwrap();
-    let mut data = comment_bytes.get(index..(index + length as usize));
+    index += 4;
+
+    let data = comments_bytes.get(index..(index + comment_length as usize));
     let vendor = FieldData {
         name: String::from(""),
         info: Vec::from(data.unwrap()),
     };
     metadata.push(vendor);
-    println!("Debug: Vendor!");
-    index = index + length as usize + 1;
+    index += comment_length as usize;
 
-    element = comment_bytes.get(index..index + 4);
-    length = Cursor::new(element.unwrap())
+    let number_of_comments = Cursor::new(&comments_bytes[index..(index + 4)])
         .read_u32::<LittleEndian>()
         .unwrap();
-
-    let list = length;
-    println!("List length: {}", length);
     index += 4;
-    for comment in 0..list {
-        element = comment_bytes.get(index..index + 4);
+
+    for _ in 0..number_of_comments {
+        let element = comments_bytes.get(index..(index + 4));
         index += 4;
-        length = Cursor::new(element.unwrap())
+        comment_length = Cursor::new(element.unwrap())
             .read_u32::<LittleEndian>()
             .unwrap();
-        println!("Length: {}, Index: {}", length, index);
-        println!("{:?}",comment_bytes);
-        println!("End Comment Bytes!");
-        let data = &comment_bytes[index..(index + length as usize)];
-        println!("Got data!");
+        let data = &comments_bytes[index..(index + comment_length as usize)];
         if data.is_empty() {
             break;
         }
-        let split = data.iter().position(|&x| x == 0x3d);
-        let (left, right) = data.split_at(split.unwrap());
+        let split = data.iter().position(|&x| x == 0x3d).unwrap();
+        let (left, right) = data.split_at(split);
         let title = std::str::from_utf8(left).unwrap();
+        let info = (&right[1..right.len()]).to_vec();
         let information = FieldData {
             name: String::from(title),
-            info: Vec::from(right),
+            info: info,
         };
         metadata.push(information);
-        index = index + length as usize + 1;
+        index += comment_length as usize;
     }
     for item in metadata {
-        println!("name: {}", item.name);
+        println!(
+            "{}: {}",
+            item.name,
+            std::str::from_utf8(&item.info.to_vec()).unwrap()
+        );
     }
 }
 
