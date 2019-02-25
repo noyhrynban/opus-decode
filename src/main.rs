@@ -20,14 +20,14 @@ fn main() {
     }
 }
 
-fn run(file_path: String) -> Result<(), std::io::Error> {
+fn run(file_path: String) -> Result<(), std::io::Error> { // Begins the decoding of the Opus File
     println!("Opening file: {}", file_path);
     let mut file = File::open(file_path)?;
     let mut packet_reader = PacketReader::new(&mut file);
     let _header = packet_reader.read_packet(); // This packet should be verified to be the OpusHeader packet, at most
     let comments_header = packet_reader.read_packet(); // This is where the Metadata is stored. Maybe we'll parse this out someday.
 
-    print_meta_data(comments_header.unwrap().unwrap().data);
+    print_meta_data(comments_header.unwrap().unwrap().data); //Unpacks and prints the comments header of the Opus File
 
     let mut counter = 0;
     loop {
@@ -64,14 +64,7 @@ fn run(file_path: String) -> Result<(), std::io::Error> {
     Ok(())
 }
 
-fn print_meta_data(comments_bytes: Vec<u8>) {
-    struct AlbumInfo {
-        //Struct for storing the metadata per file
-        track: String,
-        artist: String,
-        album: String,
-    }
-
+fn print_meta_data(comments_bytes: Vec<u8>) { // Takes the Comments Header previously unwrapped and unpacks and prints the data.
     struct FieldData {
         name: String,
         info: Vec<u8>,
