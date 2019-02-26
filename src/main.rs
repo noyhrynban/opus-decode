@@ -155,6 +155,6 @@ mod tests {
 
     #[test]
     fn it_should_run_a_real_file_more_than_2_frames_per_packet_and_lots_of_padding() {
-        run("test_files/silence-60ms-1000.opus".to_string()).unwrap();
-    }
+        run("test_files/silence-60ms-1001.opus".to_string()).unwrap();
+    } 
 }
